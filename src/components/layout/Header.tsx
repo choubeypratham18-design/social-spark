@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   Home, 
   Bell, 
@@ -9,10 +9,13 @@ import {
   X,
   User,
   Settings,
-  LogOut
+  LogOut,
+  LogIn
 } from 'lucide-react';
-import { useSocial } from '@/context/SocialContext';
-import Avatar from '@/components/common/Avatar';
+import { useAuth } from '@/hooks/useAuth';
+import { useNotifications } from '@/hooks/useNotifications';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import {
   DropdownMenu,
@@ -24,24 +27,31 @@ import {
 
 const Header: React.FC = () => {
   const location = useLocation();
-  const { currentUser, unreadNotificationsCount, unreadMessagesCount } = useSocial();
+  const navigate = useNavigate();
+  const { user, profile, signOut } = useAuth();
+  const { unreadCount } = useNotifications();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
 
   const navItems = [
     { path: '/', icon: Home, label: 'Home' },
-    { path: '/notifications', icon: Bell, label: 'Notifications', badge: unreadNotificationsCount },
-    { path: '/messages', icon: MessageCircle, label: 'Messages', badge: unreadMessagesCount },
+    { path: '/search', icon: Search, label: 'Search' },
+    { path: '/notifications', icon: Bell, label: 'Notifications', badge: unreadCount },
+    { path: '/messages', icon: MessageCircle, label: 'Messages' },
   ];
 
   const isActive = (path: string) => location.pathname === path;
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-card/80 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl gradient-primary">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent">
             <span className="text-xl font-bold text-primary-foreground">S</span>
           </div>
           <span className="hidden text-xl font-bold text-foreground sm:block">
@@ -55,9 +65,9 @@ const Header: React.FC = () => {
           <input
             type="text"
             placeholder="Search posts, people..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-full border border-border bg-secondary py-2.5 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+            onClick={() => navigate('/search')}
+            readOnly
+            className="w-full cursor-pointer rounded-full border border-border bg-secondary py-2.5 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
           />
         </div>
 
@@ -84,36 +94,50 @@ const Header: React.FC = () => {
             </Link>
           ))}
 
-          {/* Profile Dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="ml-2 rounded-full focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
-                <Avatar
-                  src={currentUser.avatar}
-                  alt={currentUser.displayName}
-                  size="sm"
-                  isVerified={currentUser.isVerified}
-                />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <Link to={`/profile/${currentUser.username}`}>
-                <DropdownMenuItem className="cursor-pointer">
-                  <User className="mr-2 h-4 w-4" />
-                  <span>Profile</span>
+          {/* Profile Dropdown / Login */}
+          {user && profile ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="ml-2 rounded-full focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
+                  <Avatar className="h-9 w-9">
+                    <AvatarImage src={profile.avatar_url || ''} alt={profile.name} />
+                    <AvatarFallback className="text-sm">
+                      {profile.name.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <Link to={`/profile/${profile.username}`}>
+                  <DropdownMenuItem className="cursor-pointer">
+                    <User className="mr-2 h-4 w-4" />
+                    <span>Profile</span>
+                  </DropdownMenuItem>
+                </Link>
+                <Link to="/settings/profile">
+                  <DropdownMenuItem className="cursor-pointer">
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Edit Profile</span>
+                  </DropdownMenuItem>
+                </Link>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem 
+                  onClick={handleSignOut} 
+                  className="cursor-pointer text-destructive focus:text-destructive"
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Log out</span>
                 </DropdownMenuItem>
-              </Link>
-              <DropdownMenuItem className="cursor-pointer">
-                <Settings className="mr-2 h-4 w-4" />
-                <span>Settings</span>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="cursor-pointer text-destructive focus:text-destructive">
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>Log out</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Link to="/auth">
+              <Button size="sm" className="ml-2">
+                <LogIn className="h-4 w-4 mr-2" />
+                Login
+              </Button>
+            </Link>
+          )}
         </nav>
 
         {/* Mobile Menu Button */}
@@ -129,14 +153,19 @@ const Header: React.FC = () => {
       {isMobileMenuOpen && (
         <div className="absolute left-0 right-0 border-b border-border bg-card p-4 shadow-lg md:hidden animate-slide-up">
           {/* Mobile Search */}
-          <div className="relative mb-4">
+          <div 
+            className="relative mb-4 cursor-pointer"
+            onClick={() => {
+              setIsMobileMenuOpen(false);
+              navigate('/search');
+            }}
+          >
             <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
             <input
               type="text"
               placeholder="Search..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-full border border-border bg-secondary py-2.5 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+              readOnly
+              className="w-full cursor-pointer rounded-full border border-border bg-secondary py-2.5 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground"
             />
           </div>
 
@@ -163,14 +192,38 @@ const Header: React.FC = () => {
                 )}
               </Link>
             ))}
-            <Link
-              to={`/profile/${currentUser.username}`}
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground"
-            >
-              <User className="h-5 w-5" />
-              <span>Profile</span>
-            </Link>
+            
+            {user && profile ? (
+              <>
+                <Link
+                  to={`/profile/${profile.username}`}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground"
+                >
+                  <User className="h-5 w-5" />
+                  <span>Profile</span>
+                </Link>
+                <button
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    handleSignOut();
+                  }}
+                  className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-destructive hover:bg-secondary"
+                >
+                  <LogOut className="h-5 w-5" />
+                  <span>Log out</span>
+                </button>
+              </>
+            ) : (
+              <Link
+                to="/auth"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-primary hover:bg-secondary"
+              >
+                <LogIn className="h-5 w-5" />
+                <span>Login / Sign Up</span>
+              </Link>
+            )}
           </nav>
         </div>
       )}
