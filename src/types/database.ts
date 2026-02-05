@@ -35,15 +35,30 @@ export interface PostLike {
   created_at: string;
 }
 
-export interface PostComment {
-  id: string;
-  post_id: string;
-  user_id: string;
-  content: string;
-  created_at: string;
-  updated_at: string;
-  profile?: Profile;
-}
+ export interface PostComment {
+   id: string;
+   post_id: string;
+   user_id: string;
+   content: string;
+   parent_comment_id: string | null;
+   created_at: string;
+   updated_at: string;
+   profile?: Profile;
+   replies?: PostComment[];
+ }
+ 
+ export interface Hashtag {
+   id: string;
+   name: string;
+   created_at: string;
+ }
+ 
+ export interface PostHashtag {
+   id: string;
+   post_id: string;
+   hashtag_id: string;
+   created_at: string;
+ }
 
 export interface Follow {
   id: string;

@@ -186,6 +186,24 @@ export type Database = {
         }
         Relationships: []
       }
+      hashtags: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           content: string
@@ -284,6 +302,7 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          parent_comment_id: string | null
           post_id: string
           updated_at: string
           user_id: string
@@ -292,6 +311,7 @@ export type Database = {
           content: string
           created_at?: string
           id?: string
+          parent_comment_id?: string | null
           post_id: string
           updated_at?: string
           user_id: string
@@ -300,13 +320,57 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          parent_comment_id?: string | null
           post_id?: string
           updated_at?: string
           user_id?: string
         }
         Relationships: [
           {
+            foreignKeyName: "post_comments_parent_comment_id_fkey"
+            columns: ["parent_comment_id"]
+            isOneToOne: false
+            referencedRelation: "post_comments"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "post_comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      post_hashtags: {
+        Row: {
+          created_at: string
+          hashtag_id: string
+          id: string
+          post_id: string
+        }
+        Insert: {
+          created_at?: string
+          hashtag_id: string
+          id?: string
+          post_id: string
+        }
+        Update: {
+          created_at?: string
+          hashtag_id?: string
+          id?: string
+          post_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_hashtags_hashtag_id_fkey"
+            columns: ["hashtag_id"]
+            isOneToOne: false
+            referencedRelation: "hashtags"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_hashtags_post_id_fkey"
             columns: ["post_id"]
             isOneToOne: false
             referencedRelation: "posts"

@@ -1,4 +1,5 @@
-import { Toaster } from "@/components/ui/toaster";
+ import { ThemeProvider } from "@/components/ThemeProvider";
+ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -10,8 +11,9 @@ import NotificationsPage from "./pages/NotificationsPage";
 import MessagesPage from "./pages/MessagesPage";
 import Search from "./pages/Search";
 import EditProfile from "./pages/EditProfile";
-import Auth from "./pages/Auth";
-import NotFound from "./pages/NotFound";
+ import Auth from "./pages/Auth";
+ import HashtagPage from "./pages/HashtagPage";
+ import NotFound from "./pages/NotFound";
 import { Loader2 } from "lucide-react";
 
 const queryClient = new QueryClient();
@@ -50,7 +52,9 @@ const AppRoutes = () => {
       <Route path="/" element={<Feed />} />
       <Route path="/auth" element={<Auth />} />
       <Route path="/profile/:username" element={<Profile />} />
-      <Route path="/search" element={<Search />} />
+ 
+       <Route path="/search" element={<Search />} />
+       <Route path="/hashtag/:tag" element={<HashtagPage />} />
       <Route
         path="/notifications"
         element={
@@ -80,18 +84,20 @@ const AppRoutes = () => {
   );
 };
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <AuthProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AppRoutes />
-        </BrowserRouter>
-      </AuthProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+ const App = () => (
+   <ThemeProvider defaultTheme="system" storageKey="socialhub-ui-theme">
+     <QueryClientProvider client={queryClient}>
+       <TooltipProvider>
+         <AuthProvider>
+           <Toaster />
+           <Sonner />
+           <BrowserRouter>
+             <AppRoutes />
+           </BrowserRouter>
+         </AuthProvider>
+       </TooltipProvider>
+     </QueryClientProvider>
+   </ThemeProvider>
+ );
 
 export default App;
