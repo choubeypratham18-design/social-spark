@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from './useAuth';
-import { PostWithProfile, PostComment, Profile } from '@/types/database';
+ import { useState, useEffect, useCallback, useRef } from 'react';
+ import { supabase } from '@/integrations/supabase/client';
+ import { useAuth } from './useAuth';
+ import { PostWithProfile, PostComment, Profile } from '@/types/database';
+ import { saveHashtags } from '@/lib/hashtags';
 
 const POSTS_PER_PAGE = 10;
 
@@ -144,11 +145,13 @@ export const usePosts = () => {
       .select()
       .single();
 
-    if (!error) {
-      refresh();
-    }
-
-    return { data, error };
+     if (!error && data) {
+       // Save hashtags
+       await saveHashtags(data.id, content);
+       refresh();
+     }
+ 
+     return { data, error };
   };
 
   const deletePost = async (postId: string) => {

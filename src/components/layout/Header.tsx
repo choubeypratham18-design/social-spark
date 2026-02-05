@@ -1,36 +1,45 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { 
-  Home, 
-  Bell, 
-  MessageCircle, 
-  Search, 
-  Menu, 
-  X,
-  User,
-  Settings,
-  LogOut,
-  LogIn
-} from 'lucide-react';
+ import { 
+   Home, 
+   Bell, 
+   MessageCircle, 
+   Search, 
+   Menu, 
+   X,
+   User,
+   Settings,
+   LogOut,
+   LogIn,
+   Sun,
+   Moon,
+ } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNotifications } from '@/hooks/useNotifications';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+ import {
+   DropdownMenu,
+   DropdownMenuContent,
+   DropdownMenuItem,
+   DropdownMenuSeparator,
+   DropdownMenuTrigger,
+ } from '@/components/ui/dropdown-menu';
+ import { useTheme } from '@/components/ThemeProvider';
 
 const Header: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, profile, signOut } = useAuth();
   const { unreadCount } = useNotifications();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+ 
+   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+   const { theme, setTheme } = useTheme();
+ 
+   const toggleTheme = () => {
+     setTheme(theme === 'dark' ? 'light' : 'dark');
+   };
 
   const navItems = [
     { path: '/', icon: Home, label: 'Home' },
@@ -94,8 +103,23 @@ const Header: React.FC = () => {
             </Link>
           ))}
 
-          {/* Profile Dropdown / Login */}
-          {user && profile ? (
+ 
+         {/* Theme Toggle */}
+         <Button
+           variant="ghost"
+           size="icon"
+           onClick={toggleTheme}
+           className="rounded-full"
+         >
+           {theme === 'dark' ? (
+             <Sun className="h-5 w-5 text-muted-foreground" />
+           ) : (
+             <Moon className="h-5 w-5 text-muted-foreground" />
+           )}
+         </Button>
+ 
+         {/* Profile Dropdown / Login */}
+           {user && profile ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="ml-2 rounded-full focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
@@ -193,37 +217,50 @@ const Header: React.FC = () => {
               </Link>
             ))}
             
-            {user && profile ? (
-              <>
-                <Link
-                  to={`/profile/${profile.username}`}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground"
-                >
-                  <User className="h-5 w-5" />
-                  <span>Profile</span>
-                </Link>
-                <button
-                  onClick={() => {
-                    setIsMobileMenuOpen(false);
-                    handleSignOut();
-                  }}
-                  className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-destructive hover:bg-secondary"
-                >
-                  <LogOut className="h-5 w-5" />
-                  <span>Log out</span>
-                </button>
-              </>
-            ) : (
-              <Link
-                to="/auth"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-primary hover:bg-secondary"
-              >
-                <LogIn className="h-5 w-5" />
-                <span>Login / Sign Up</span>
-              </Link>
-            )}
+ 
+             {/* Mobile Theme Toggle */}
+             <button
+               onClick={() => {
+                 toggleTheme();
+                 setIsMobileMenuOpen(false);
+               }}
+               className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground"
+             >
+               {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+               <span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
+             </button>
+             
+             {user && profile ? (
+               <>
+                 <Link
+                   to={`/profile/${profile.username}`}
+                   onClick={() => setIsMobileMenuOpen(false)}
+                   className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground"
+                 >
+                   <User className="h-5 w-5" />
+                   <span>Profile</span>
+                 </Link>
+                 <button
+                   onClick={() => {
+                     setIsMobileMenuOpen(false);
+                     handleSignOut();
+                   }}
+                   className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-destructive hover:bg-secondary"
+                 >
+                   <LogOut className="h-5 w-5" />
+                   <span>Log out</span>
+                 </button>
+               </>
+             ) : (
+               <Link
+                 to="/auth"
+                 onClick={() => setIsMobileMenuOpen(false)}
+                 className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-primary hover:bg-secondary"
+               >
+                 <LogIn className="h-5 w-5" />
+                 <span>Login / Sign Up</span>
+               </Link>
+             )}
           </nav>
         </div>
       )}

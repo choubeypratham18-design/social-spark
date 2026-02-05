@@ -1,26 +1,36 @@
-import React from 'react';
+ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { PostWithProfile } from '@/types/database';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Heart, MessageCircle, Share2, Bookmark } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
+ import { Heart, MessageCircle, Share2, Bookmark, ChevronDown, ChevronUp } from 'lucide-react';
+ import { formatDistanceToNow } from 'date-fns';
+ import { renderContentWithHashtags } from '@/lib/hashtags';
+ import CommentSection from './CommentSection';
+ import ShareDialog from './ShareDialog';
 
-interface PostCardProps {
-  post: PostWithProfile;
-  onLike?: () => void;
-  onComment?: () => void;
-  onShare?: () => void;
-  onBookmark?: () => void;
-}
+ interface PostCardProps {
+   post: PostWithProfile;
+   onLike?: () => void;
+   onBookmark?: () => void;
+   onCommentAdded?: () => void;
+ }
 
-const PostCard: React.FC<PostCardProps> = ({
-  post,
-  onLike,
-  onComment,
-  onShare,
-  onBookmark,
-}) => {
+ const PostCard: React.FC<PostCardProps> = ({
+   post,
+   onLike,
+   onBookmark,
+   onCommentAdded,
+ }) => {
+   const [showComments, setShowComments] = useState(false);
+   const [showShareDialog, setShowShareDialog] = useState(false);
+   const [commentsCount, setCommentsCount] = useState(post.comments_count);
+ 
+   const handleCommentAdded = () => {
+     setCommentsCount((prev) => prev + 1);
+     onCommentAdded?.();
+   };
+ 
   const formattedDate = formatDistanceToNow(new Date(post.created_at), { addSuffix: true });
 
   return (
@@ -48,10 +58,13 @@ const PostCard: React.FC<PostCardProps> = ({
         </div>
       </div>
 
-      {/* Content */}
-      <div className="mb-3">
-        <p className="text-foreground whitespace-pre-wrap">{post.content}</p>
-      </div>
+ 
+       {/* Content with hashtags */}
+       <div className="mb-3">
+         <p className="text-foreground whitespace-pre-wrap">
+           {renderContentWithHashtags(post.content)}
+         </p>
+       </div>
 
       {/* Image */}
       {post.image_url && (
@@ -64,47 +77,70 @@ const PostCard: React.FC<PostCardProps> = ({
         </div>
       )}
 
-      {/* Actions */}
-      <div className="flex items-center justify-between pt-2 border-t border-border/50">
-        <Button
-          variant="ghost"
-          size="sm"
-          className={`gap-2 ${post.is_liked ? 'text-red-500 hover:text-red-600' : 'text-muted-foreground'}`}
-          onClick={onLike}
-        >
-          <Heart className={`h-4 w-4 ${post.is_liked ? 'fill-current' : ''}`} />
-          <span>{post.likes_count}</span>
-        </Button>
-
-        <Button
-          variant="ghost"
-          size="sm"
-          className="gap-2 text-muted-foreground"
-          onClick={onComment}
-        >
-          <MessageCircle className="h-4 w-4" />
-          <span>{post.comments_count}</span>
-        </Button>
-
-        <Button
-          variant="ghost"
-          size="sm"
-          className="gap-2 text-muted-foreground"
-          onClick={onShare}
-        >
-          <Share2 className="h-4 w-4" />
-        </Button>
-
-        <Button
-          variant="ghost"
-          size="sm"
-          className={`${post.is_bookmarked ? 'text-primary' : 'text-muted-foreground'}`}
-          onClick={onBookmark}
-        >
-          <Bookmark className={`h-4 w-4 ${post.is_bookmarked ? 'fill-current' : ''}`} />
-        </Button>
-      </div>
-    </div>
+ 
+       {/* Actions */}
+       <div className="flex items-center justify-between pt-2 border-t border-border/50">
+         <Button
+           variant="ghost"
+           size="sm"
+           className={`gap-2 ${post.is_liked ? 'text-destructive hover:text-destructive' : 'text-muted-foreground'}`}
+           onClick={onLike}
+         >
+           <Heart className={`h-4 w-4 ${post.is_liked ? 'fill-current' : ''}`} />
+           <span>{post.likes_count}</span>
+         </Button>
+ 
+         <Button
+           variant="ghost"
+           size="sm"
+           className={`gap-2 ${showComments ? 'text-primary' : 'text-muted-foreground'}`}
+           onClick={() => setShowComments(!showComments)}
+         >
+           <MessageCircle className="h-4 w-4" />
+           <span>{commentsCount}</span>
+           {showComments ? (
+             <ChevronUp className="h-3 w-3" />
+           ) : (
+             <ChevronDown className="h-3 w-3" />
+           )}
+         </Button>
+ 
+         <Button
+           variant="ghost"
+           size="sm"
+           className="gap-2 text-muted-foreground"
+           onClick={() => setShowShareDialog(true)}
+         >
+           <Share2 className="h-4 w-4" />
+         </Button>
+ 
+         <Button
+           variant="ghost"
+           size="sm"
+           className={`${post.is_bookmarked ? 'text-primary' : 'text-muted-foreground'}`}
+           onClick={onBookmark}
+         >
+           <Bookmark className={`h-4 w-4 ${post.is_bookmarked ? 'fill-current' : ''}`} />
+         </Button>
+       </div>
+ 
+       {/* Comments Section */}
+       {showComments && (
+         <CommentSection
+           postId={post.id}
+           commentsCount={commentsCount}
+           onCommentAdded={handleCommentAdded}
+         />
+       )}
+ 
+       {/* Share Dialog */}
+       <ShareDialog
+         open={showShareDialog}
+         onOpenChange={setShowShareDialog}
+         postId={post.id}
+         postContent={post.content}
+       />
+     </div>
   );
 };
 
